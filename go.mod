@@ -3,7 +3,6 @@ module github.com/MGomed/common
 go 1.22.4
 
 require (
-	github.com/MGomed/platform-common v0.0.0-20241109085806-5992773a95f9
 	github.com/georgysavva/scany v1.2.2
 	github.com/golang/mock v1.6.0
 	github.com/gomodule/redigo v1.9.2
