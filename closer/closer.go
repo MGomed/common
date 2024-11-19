@@ -8,11 +8,10 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/MGomed/common/pkg/logger"
-	"golang.org/x/sync/errgroup"
+	errgroup "golang.org/x/sync/errgroup"
 )
 
-var globalCloser = New(logger.InitLogger(), syscall.SIGTERM, syscall.SIGINT)
+var globalCloser = New(syscall.SIGTERM, syscall.SIGINT)
 
 // Add adds `func() error` callback to the globalCloser
 func Add(f ...func() error) {
@@ -26,12 +25,13 @@ func Wait() {
 
 // CloseAll ...
 func CloseAll() {
-	globalCloser.CloseAll()
+	if err := globalCloser.CloseAll(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Closer ...
 type Closer struct {
-	log   *log.Logger
 	mu    sync.Mutex
 	once  sync.Once
 	done  chan struct{}
@@ -39,9 +39,8 @@ type Closer struct {
 }
 
 // New returns new Closer, if []os.Signal is specified Closer will automatically call CloseAll when one of signals is received from OS
-func New(log *log.Logger, sig ...os.Signal) *Closer {
+func New(sig ...os.Signal) *Closer {
 	c := &Closer{
-		log:  log,
 		done: make(chan struct{}),
 	}
 	if len(sig) > 0 {
@@ -50,7 +49,10 @@ func New(log *log.Logger, sig ...os.Signal) *Closer {
 			signal.Notify(ch, sig...)
 			<-ch
 			signal.Stop(ch)
-			c.CloseAll()
+
+			if err := c.CloseAll(); err != nil {
+				log.Fatal(err)
+			}
 		}()
 	}
 	return c
@@ -69,7 +71,7 @@ func (c *Closer) Wait() {
 }
 
 // CloseAll calls all closer functions
-func (c *Closer) CloseAll() {
+func (c *Closer) CloseAll() (err error) {
 	c.once.Do(func() {
 		defer close(c.done)
 
@@ -84,8 +86,8 @@ func (c *Closer) CloseAll() {
 			g.Go(f)
 		}
 
-		if err := g.Wait(); err != nil {
-			log.Printf("error returned from Closer: %v\n", err)
-		}
+		err = g.Wait()
 	})
+
+	return
 }

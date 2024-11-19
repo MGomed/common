@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	db "github.com/MGomed/common/pkg/client/db"
+	db "github.com/MGomed/common/client/db"
 	gomock "github.com/golang/mock/gomock"
 	pgconn "github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
