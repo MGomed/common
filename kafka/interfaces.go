@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 
-	consumer "github.com/MGomed/auth/pkg/kafka/consumer"
+	consumer "github.com/MGomed/common/kafka/consumer"
 )
 
 //go:generate mockgen -destination=./mocks/kafka_mock.go -package=mocks -source=interfaces.go
