@@ -2,9 +2,10 @@ package consumer
 
 import (
 	"context"
-	"log"
 
 	sarama "github.com/IBM/sarama"
+
+	logger "github.com/MGomed/common/logger"
 )
 
 // Handler defines message handling func
@@ -12,12 +13,12 @@ type Handler func(ctx context.Context, msg *sarama.ConsumerMessage) error
 
 // GroupHandler is consumer group handler
 type GroupHandler struct {
-	log        *log.Logger
+	log        logger.Interface
 	msgHandler Handler
 }
 
 // NewGroupHandler is GroupHandler struct constructor
-func NewGroupHandler(logger *log.Logger) *GroupHandler {
+func NewGroupHandler(logger logger.Interface) *GroupHandler {
 	return &GroupHandler{
 		log: logger,
 	}
@@ -40,23 +41,26 @@ func (c *GroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim s
 		select {
 		case message, ok := <-claim.Messages():
 			if !ok {
-				c.log.Printf("message channel was closed\n")
+				c.log.Warn("Message channel was closed")
+
 				return nil
 			}
 
-			c.log.Printf("message claimed: value = %s, timestamp = %v, topic = %s\n",
+			c.log.Debug("Message claimed: value = %s, timestamp = %v, topic = %s",
 				string(message.Value), message.Timestamp, message.Topic)
 
 			err := c.msgHandler(session.Context(), message)
 			if err != nil {
-				c.log.Printf("error handling message: %v\n", err)
+				c.log.Error("Error handling message: %v", err)
+
 				continue
 			}
 
 			session.MarkMessage(message, "")
 
 		case <-session.Context().Done():
-			c.log.Printf("session context done\n")
+			c.log.Warn("Session context done")
+
 			return nil
 		}
 	}

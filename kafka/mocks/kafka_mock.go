@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	consumer "github.com/MGomed/auth/pkg/kafka/consumer"
+	consumer "github.com/MGomed/common/kafka/consumer"
 	gomock "github.com/golang/mock/gomock"
 )
 

@@ -2,18 +2,19 @@ package producer
 
 import (
 	"context"
-	"log"
 
 	sarama "github.com/IBM/sarama"
+
+	logger "github.com/MGomed/common/logger"
 )
 
 type producer struct {
-	log  *log.Logger
+	log  logger.Interface
 	prod sarama.SyncProducer
 }
 
 // NewProducer is producer struct constructor
-func NewProducer(logger *log.Logger, brokers []string) (*producer, error) {
+func NewProducer(logger logger.Interface, brokers []string) (*producer, error) {
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.Producer.Retry.Max = 5
@@ -39,12 +40,10 @@ func (p *producer) Produce(_ context.Context, topic string, data []byte) error {
 
 	partition, offset, err := p.prod.SendMessage(msg)
 	if err != nil {
-		p.log.Printf("failed to send message in Kafka: %v\n", err.Error())
-
 		return err
 	}
 
-	p.log.Printf("message sent to partition %d with offset %d\n", partition, offset)
+	p.log.Debug("Message sent to partition %d with offset %d\n", partition, offset)
 
 	return nil
 }

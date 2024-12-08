@@ -3,21 +3,22 @@ package consumer
 import (
 	"context"
 	"errors"
-	"log"
 	"strings"
 
 	sarama "github.com/IBM/sarama"
+
+	logger "github.com/MGomed/common/logger"
 )
 
 type consumer struct {
-	log                  *log.Logger
+	log                  logger.Interface
 	consumerGroup        sarama.ConsumerGroup
 	consumerGroupHandler *GroupHandler
 }
 
 // NewConsumer is consumer struct constructor
 func NewConsumer(
-	log *log.Logger,
+	log logger.Interface,
 	consumerGroup sarama.ConsumerGroup,
 	consumerGroupHandler *GroupHandler,
 ) *consumer {
@@ -43,7 +44,6 @@ func (c *consumer) Close() error {
 func (c *consumer) consume(ctx context.Context, topic string) error {
 	for {
 		err := c.consumerGroup.Consume(ctx, strings.Split(topic, ","), c.consumerGroupHandler)
-		log.Println(err)
 		if err != nil {
 			if errors.Is(err, sarama.ErrClosedConsumerGroup) {
 				return nil
@@ -56,6 +56,6 @@ func (c *consumer) consume(ctx context.Context, topic string) error {
 			return ctx.Err()
 		}
 
-		c.log.Printf("rebalancing...\n")
+		c.log.Info("Rebalancing...")
 	}
 }

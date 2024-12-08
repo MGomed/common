@@ -2,22 +2,22 @@ package redis
 
 import (
 	"context"
-	"log"
 	"time"
 
+	logger "github.com/MGomed/common/logger"
 	go_redis "github.com/gomodule/redigo/redis"
 )
 
 type handler func(ctx context.Context, conn go_redis.Conn) error
 
 type client struct {
-	logger      *log.Logger
+	logger      logger.Interface
 	pool        *go_redis.Pool
 	connTimeout time.Duration
 }
 
 // NewClient is client struct constructor
-func NewClient(logger *log.Logger, pool *go_redis.Pool, connTimeout time.Duration) *client {
+func NewClient(logger logger.Interface, pool *go_redis.Pool, connTimeout time.Duration) *client {
 	return &client{
 		logger:      logger,
 		pool:        pool,
@@ -161,7 +161,7 @@ func (c *client) execute(ctx context.Context, handler handler) error {
 	defer func() {
 		err = conn.Close()
 		if err != nil {
-			c.logger.Printf("failed to close redis connection: %v\n", err)
+			c.logger.Error("Failed to close redis connection: %v", err)
 		}
 	}()
 
@@ -179,7 +179,7 @@ func (c *client) getConnect(ctx context.Context) (go_redis.Conn, error) {
 
 	conn, err := c.pool.GetContext(getConnTimeoutCtx)
 	if err != nil {
-		c.logger.Printf("failed to get redis connection: %v\n", err)
+		c.logger.Error("Failed to get connection from pool: %v", err)
 
 		_ = conn.Close()
 		return nil, err
